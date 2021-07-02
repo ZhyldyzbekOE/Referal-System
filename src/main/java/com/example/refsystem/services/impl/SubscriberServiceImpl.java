@@ -5,6 +5,7 @@ import com.example.refsystem.mappers.SubscriberMapper;
 import com.example.refsystem.models.Response;
 import com.example.refsystem.models.Subscriber;
 import com.example.refsystem.models.dto.SubscriberDto;
+import com.example.refsystem.services.InviteService;
 import com.example.refsystem.services.SubscriberService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,9 @@ public class SubscriberServiceImpl implements SubscriberService {
 
     @Autowired
     private SubscriberRepository subscriberRepository;
+
+    @Autowired
+    private InviteService inviteService;
 
     @Override
     public Response blockSubscriber(SubscriberDto subscriberDto) {
@@ -78,6 +82,15 @@ public class SubscriberServiceImpl implements SubscriberService {
     public List<SubscriberDto> selectAllSubscribers() {
         List<Subscriber> subscribers = subscriberRepository.findAll();
         return SubscriberMapper.INSTANCE.toSubscriberDto(subscribers);
+    }
+
+    @Override
+    public Response acceptInvite(SubscriberDto subscriberDto) {
+        SubscriberDto subscriberDto1 = saveIfNotExists(subscriberDto);
+        if (inviteService.acceptInviteAndChangeStatusOnAccept(subscriberDto1)){
+            return Response.builder().status(203).message("Вы успешно приняли Invite!").build();
+        }
+        return Response.builder().status(505).message("У вас пока нет активных приглашений!").build();
     }
 
 

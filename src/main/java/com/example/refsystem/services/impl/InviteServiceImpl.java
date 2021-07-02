@@ -9,10 +9,8 @@ import com.example.refsystem.models.dto.InviteDto;
 import com.example.refsystem.models.dto.SubscriberDto;
 import com.example.refsystem.services.InviteService;
 import com.example.refsystem.services.SubscriberService;
-import io.swagger.models.auth.In;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -44,6 +42,7 @@ public class InviteServiceImpl implements InviteService {
         if (!checkActiveInvite(inviteDto)){
             changeStatusAndDateInvite(inviteDto);
         }
+
         if (!checkDateInvite(inviteDto)){
             return Response.builder().status(501).message("Уважаемый абонент вы превысили ежедневный лимит!").build();
         }
@@ -55,8 +54,31 @@ public class InviteServiceImpl implements InviteService {
         return Response.builder().status(201).message("Invite успешно отправлен!").build();
 
     }
-// 2021-06-30 16:08:33.857000
-    private boolean saveInvite(InviteDto inviteDto){
+
+    @Override
+    public boolean acceptInviteAndChangeStatusOnAccept(SubscriberDto subscriberDto) {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss.SSS");
+        Date date = null;
+        Invite invite = inviteRepository.findByReceiverIdAndInviteStatus(subscriberDto.getId(), InviteStatus.ACTIVE);
+        if (invite==null){
+            return false;
+        }
+        InviteDto inviteDto = InviteMapper.INSTANCE.toInviteDto(invite);
+        inviteDto.setInviteStatus(InviteStatus.ACCEPTED);
+        try {
+            date = sdf.parse(sdf.format(new Date()));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        inviteDto.setEndDate(date);
+        Invite invite1 = inviteRepository.save(InviteMapper.INSTANCE.toInvite(inviteDto));
+        System.out.println("Изменил статус " + invite1);
+        return invite1.getInviteStatus().equals(InviteStatus.ACCEPTED);
+    }
+
+    private boolean
+
+    saveInvite(InviteDto inviteDto){
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss.SSS");
         Date date = null;
         try {
@@ -113,7 +135,7 @@ public class InviteServiceImpl implements InviteService {
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
         date = cal.getTime();
-        System.out.println("dwdawdawdwadw");
+
         Calendar calEnd = new GregorianCalendar();
         calEnd.setTime(new Date());
         calEnd.set(Calendar.YEAR, calEnd.get(Calendar.YEAR)+978);
@@ -156,7 +178,6 @@ public class InviteServiceImpl implements InviteService {
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
         date = cal.getTime();
-        System.out.println("пашет");
         Calendar calEnd = new GregorianCalendar();
         calEnd.setTime(new Date());
         calEnd.set(Calendar.YEAR, calEnd.get(Calendar.YEAR)+978);
@@ -166,7 +187,6 @@ public class InviteServiceImpl implements InviteService {
         Date midnightTonight = calEnd.getTime();
         List<Invite> invites = inviteRepository.findByStartDateBetweenAndSenderIdAndReceiverId(date, midnightTonight, inviteDto.getSender().getId(), inviteDto.getReceiver().getId());
         long count = invites.size();
-        System.out.println("Размер " +count);
         return count >= 1;
     }
 

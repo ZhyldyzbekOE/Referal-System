@@ -12,4 +12,6 @@ public interface SubscriberService {
     SubscriberDto saveIfNotExists(SubscriberDto subscriberDto);
 
     List<SubscriberDto> selectAllSubscribers();
+
+    Response acceptInvite(SubscriberDto subscriberDto);
 }

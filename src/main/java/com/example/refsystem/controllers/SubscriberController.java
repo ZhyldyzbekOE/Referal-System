@@ -18,5 +18,9 @@ public class SubscriberController {
         return subscriberService.blockSubscriber(subscriberDto);
     }
 
+    @PutMapping("/accept")
+    public Response acceptInvite(@RequestBody SubscriberDto subscriberDto){
+        return subscriberService.acceptInvite(subscriberDto);
+    }
 
 }
